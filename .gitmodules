@@ -1,0 +1,3 @@
+[submodule "core/tools"]
+	path = core/tools
+	url = https://github.com/FridrichDerGosse/3D-Object-Tracking-Python-Tools.git
