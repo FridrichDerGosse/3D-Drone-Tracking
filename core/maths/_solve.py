@@ -30,7 +30,7 @@ def solve(*results: CameraResult) -> Vec3:
     result = minimize(objective, x0=np.array([0.0, 0.0, 0.0]), args=(lines,), method='BFGS')
 
     if result.success:
-        return result.x
+        return Vec3.from_cartesian(*result.x)
 
     else:
         raise ValueError("Optimization failed: " + result.message)
