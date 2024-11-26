@@ -12,7 +12,12 @@ from pydantic import TypeAdapter
 from core.comms import *
 import typing as tp
 
+from core.comms._data_client import try_find_id
 
+try_find_id('{"id":173024,"time":"2024.11.22-11:25:01","station_id":1,"temperature":-2.6,"temperature_index":-4.46,"humidity":89.7,"air_pressure":null}')
+try_find_id('{"id":173024,"time":"2024.1')
+
+exit()
 def handle_msg(msg: TResData):
     print("callback: ", msg)
 

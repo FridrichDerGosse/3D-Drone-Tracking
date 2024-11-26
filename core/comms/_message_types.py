@@ -80,3 +80,4 @@ class DataMessage(_Message):
 
 
 Message = tp.Annotated[tp.Union[ReqMessage, AckMessage, ReplMessage, DataMessage], Field(discriminator='type')]
+MessageData = tp.Union[ReqData, AckData, ReplData, DataDataMessage]
