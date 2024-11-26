@@ -10,15 +10,17 @@ Nilusink
 from concurrent.futures import ThreadPoolExecutor
 from core.tools import debugger, DebugLevel
 from pydantic import TypeAdapter
-from time import perf_counter
+from time import perf_counter, sleep
 from core.comms import *
 from icecream import ic
+
+print(dir(debugger))
 
 start = perf_counter()
 
 def time_since_start() -> str:
     """
-    styleized time since game start
+    stylized time since game start
     gamestart being time since `mainloop` was called
     """
     t_ms = round(perf_counter() - start, 4)
@@ -39,10 +41,10 @@ ic.configureOutput(prefix=time_since_start)
 def handle_msg(msg: TResData):
     print("callback: ", msg)
 
-debugger.init("./test.log", write_debug=True, debug_level=DebugLevel.trace)
+debugger.init("./test.log", write_debug=True, debug_level=DebugLevel.log)
 
 pool = ThreadPoolExecutor()
-dc = DataClient(("127.0.0.1", 10_000), handle_msg, pool)
+dc = DataClient(("127.0.0.1", 10_000), handle_msg, handle_msg, pool)
 dc.start()
 
 
@@ -75,18 +77,19 @@ message_adapter = TypeAdapter(Message)
 #     }
 # }
 
+
+# message matching test
+mf = dc.send_message(ReplData(to=324, data={}))
+
 data = {
     "type": "ack",
-    "id": 0,
+    "id": 324,
     "time": 0,
     "data": {
-        "to": 120934,
+        "to": mf.origin_message.id,
         "ack": 1
     }
 }
-
-# message matching test
-dc.send_message(ReplData(to=324, data={}))
 x = message_adapter.validate_python(data)
 
 try:
