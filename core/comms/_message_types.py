@@ -60,7 +60,7 @@ class ReplData(BaseModel):
 class _Message(BaseModel):
     type: str
     id: int
-    time: int
+    time: float
 
 class ReqMessage(_Message):
     type: tp.Literal["req"]
