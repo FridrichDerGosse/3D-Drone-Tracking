@@ -32,7 +32,7 @@ def main():
         return f"{t1: >4}.{t2: <4} |> "
 
     ic.configureOutput(prefix=time_since_start)
-    debugger.init("./tracking.log", write_debug=False, debug_level=DebugLevel.log)
+    debugger.init("./tracking.log", write_debug=False, debug_level=DebugLevel.info)
 
     # threading stuff
     pool = ThreadPoolExecutor()

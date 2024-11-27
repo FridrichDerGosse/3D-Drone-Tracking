@@ -8,7 +8,6 @@ Author:
 Nilusink
 """
 from concurrent.futures import ThreadPoolExecutor, Future
-from pydantic import TypeAdapter
 import typing as tp
 import socket as s
 
@@ -66,9 +65,6 @@ class DataClient(s.socket):
         """
         not meant to be called, should be run in a thread
         """
-        # pydantic validator
-        message_adapter = TypeAdapter(Message)
-
         while self._running:
             # receive message
             try:

@@ -19,6 +19,8 @@ class Track:
             (perf_counter(), initial_position)
         ]
 
+        self._type = 0  # -1: degraded, 0: new, 1: valid
+
         debugger.info(f"new track with id {self._id} at {initial_position.xyz}")
 
     @property
@@ -29,9 +31,15 @@ class Track:
     def current_position(self) -> Vec3:
         return self._position_history[-1][1]
 
+    @property
+    def type(self) -> int:
+        return self._type
+
     def update_position(self, position: Vec3) -> None:
         """
         update the tracks position
         """
         debugger.trace(f"track {self.id} was updated by {position.xyz}")
         self._position_history.append((perf_counter(), position))
+
+        self._type = 1

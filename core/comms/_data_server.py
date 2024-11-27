@@ -8,11 +8,18 @@ Author:
 Nilusink
 """
 from concurrent.futures import ThreadPoolExecutor, Future
+from contextlib import suppress
 from uuid import getnode
+from time import sleep
+import typing as tp
 import socket
 
 from ..tools import debugger, run_with_debug, SimpleLock
 from ..tools.comms import *
+
+
+if tp.TYPE_CHECKING:
+    from ..tracking import TrackingMaster
 
 
 DEVICE_MAC: int = getnode()
@@ -21,12 +28,14 @@ DEVICE_MAC: int = getnode()
 class DataServer(socket.socket):
     encoding: str = "utf-8"
     _pending_replies: dict[int, MessageFuture]
-    _pending_updates: list[TRes3Data]
+    _pending_updates: list[TRes3Data | SInfData]
 
     def __init__(self, address: tuple[str, int], pool: ThreadPoolExecutor) -> None:
         self._clients: list[socket.socket] = []
         self._address = address
         self._pool = pool
+
+        self.tm: TrackingMaster = ...
 
         # initialize socket
         super().__init__(socket.AF_INET, socket.SOCK_STREAM)
@@ -62,33 +71,44 @@ class DataServer(socket.socket):
         """
         while self._running:
             if len(self._pending_updates) <= 0:
+                sleep(.01)
+                debugger.trace(f"waiting on update, clients: {len(self._clients)}")
                 continue
 
-            debugger.log(f"updating clients, {self._pending_updates}")
+            debugger.log(f"server: updating clients, {self._pending_updates}")
 
             # get updates from list
+            debugger.trace("waiting for sem")
             self._pending_updates_sem.acquire()
 
             updates = self._pending_updates
-            self._pending_updates.clear()
+            self._pending_updates = []
 
             self._pending_updates_sem.release()
+            debugger.trace("got sam")
 
             # send all updates to all clients
             for update in updates:
-
                 debugger.trace(f"update: {update}")
 
                 # iterate clients
                 futures = []
                 for client in self._clients:
                     debugger.trace(f"sending to {client}")
-                    futures.append(self.send_message(update, client))
+                    with suppress(Exception):
+                        fut = self.send_message(update, client)
+                        futures.append(fut)
 
                 # wait for all clients to reply
                 for future in futures:
                     debugger.trace(f"waiting for {future.origin_message.id}")
-                    future.wait_until_done(.001)
+
+                    # wait for client
+                    if not future.wait_until_done(.001, .2):
+                        debugger.warning(f"Timeout while waiting for client ack")
+                        continue
+
+                    debugger.trace(f"got {future.origin_message.id}")
 
     @run_with_debug(show_finish=True, reraise_errors=True)
     def _receive_loop(self) -> None:
@@ -122,7 +142,21 @@ class DataServer(socket.socket):
         handles a client
         """
         debugger.info(f"client {addr} connected")
-        self._clients.append(client)
+
+        def send_sinf() -> None:
+            # send all currently available camera info to client
+            debugger.info(f"sending station information to client")
+            for cam in self.tm.cams:
+                debugger.trace(f"sending {cam} to {client}")
+                fut = self.send_message(cam, client)
+
+                # wait for ack
+                fut.wait_until_done(.01)
+
+            self._clients.append(client)
+
+
+        self._pool.submit(send_sinf)
 
         while self._running:
             # receive message
@@ -181,6 +215,7 @@ class DataServer(socket.socket):
                 debugger.warning("unknown message type")
                 return self.send_message(nack, client)
 
+    # @run_with_debug(show_finish=True, reraise_errors=True)
     def send_message(
             self,
             data: MessageData,
@@ -189,6 +224,8 @@ class DataServer(socket.socket):
         """
         send a message to the client
         """
+        debugger.trace(f"DataServer: sending {data}")
+
         def append_to_queue(f: MessageFuture) -> None:
             # make sure no one else is writing to pending_replies
             self._pending_replies_sem.acquire()
@@ -201,16 +238,17 @@ class DataServer(socket.socket):
 
         # send message to server
         client.send(message.model_dump_json(
-            exclude_unset=True
+            exclude_unset=False
         ).encode(self.encoding))
 
         debugger.trace(f"DataServer: sent message")
         return future
 
-    def update_clients(self, update: TRes3Data) -> None:
+    def update_clients(self, update: TRes3Data | SInfData) -> None:
         """
         send update to clients
         """
+        debugger.trace(f"adding update")
         # check for write permissions
         self._pending_updates_sem.acquire()
         self._pending_updates.append(update)

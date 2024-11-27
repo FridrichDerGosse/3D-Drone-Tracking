@@ -11,24 +11,34 @@ import matplotlib.pyplot as plt
 import numpy as np
 import math as m
 
+from core.tools import CamAngle3
 from core.maths import solve, CameraResult
 from core.tools import Vec3
 
 
-s1 = CameraResult(
-    Vec3.from_polar(.3, 0, 10),
-    -Vec3.from_polar(0, -.1, 10)
-)
-s2 = CameraResult(
-    Vec3.from_polar((2*m.pi) / 3 + .005, 0, 10),
-    -Vec3.from_polar((2*m.pi) / 3.1, -.1, 10)
-)
-s3 = CameraResult(
-    Vec3.from_polar((4*m.pi) / 3 -.04, 0, 10),
-    -Vec3.from_polar((4*m.pi) / 3 + .05, -.1, 10)
-)
+# s1 = CameraResult(
+#     Vec3.from_polar(.3, 0, 10),
+#     -Vec3.from_polar(0, -.1, 10)
+# )
+# s2 = CameraResult(
+#     Vec3.from_polar((2*m.pi) / 3 + .005, 0, 10),
+#     -Vec3.from_polar((2*m.pi) / 3.1, -.1, 10)
+# )
+# s3 = CameraResult(
+#     Vec3.from_polar((4*m.pi) / 3 -.04, 0, 10),
+#     -Vec3.from_polar((4*m.pi) / 3 + .05, -.1, 10)
+# )
 
-target = solve(s1, s2, s3).xyz
+a1 = CamAngle3(cam_id=0, position=(10.0, 0.0, 0.0), direction=(-0.9761160908245395, -0.02929227093332195, 0.21526574297130507))
+a2 = CamAngle3(cam_id=1, position=(-4.999999999999998, 8.660254037844387, 0.0), direction=(0.5689841315221609, -0.790963239543564, 0.22502046966159106))
+a3 = CamAngle3(cam_id=2, position=(-5.000000000000004, -8.660254037844386, 0.0), direction=(0.424894616238502, 0.8498929878596323, 0.3116832916255907))
+
+angles = [CameraResult(
+    Vec3.from_cartesian(*a.position),
+    Vec3.from_cartesian(*a.direction) * 3
+) for a in [a1, a2, a3]]
+
+target = solve(*angles).xyz
 
 print(target)
 
@@ -38,7 +48,7 @@ fig = plt.figure(figsize=(10, 8))
 ax = fig.add_subplot(111, projection='3d')
 
 lines: list[tuple[np.array, np.array]] = []
-for result in [s1, s2, s3]:
+for result in angles:
     lines.append((
         np.array(result.origin.xyz),
         np.array(result.direction.xyz),
