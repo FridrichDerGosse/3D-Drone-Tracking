@@ -74,7 +74,7 @@ def handle_client(c: socket.socket, a: tuple):
                         cam_angles=[
                             CamAngle(cam_id=0, direction=(.03 + .1 * m.sin(.4 * mod), .1 + m.cos(.05 * mod) * .1)),
                             CamAngle(cam_id=1, direction=(.01 - .1 * m.sin(.4 * mod), .11 + m.cos(.05 * mod) * .1)),
-                            CamAngle(cam_id=2, direction=(.06 + .1 * m.sin(.4 * mod), .2 + m.cos(.05 * mod) * .1))
+                            CamAngle(cam_id=2, direction=(.06 + .1 * m.cos(.3 * mod), .15 + m.cos(.05 * mod) * .1))
                         ]
                     )
                 )

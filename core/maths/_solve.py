@@ -10,11 +10,12 @@ Nilusink
 from scipy.optimize import minimize
 import numpy as np
 
+from ..tools import Vec3, debugger, run_with_debug
 from ._types import CameraResult
-from ..tools import Vec3
 
 
-def solve(*results: CameraResult) -> Vec3:
+# @run_with_debug(show_finish=True, reraise_errors=True)
+def solve(*results: CameraResult) -> tuple[Vec3, float]:
     """
     takes all camera results and calculates the closest point in a
     3-dimensional space
@@ -30,7 +31,14 @@ def solve(*results: CameraResult) -> Vec3:
     result = minimize(objective, x0=np.array([0.0, 0.0, 0.0]), args=(lines,), method='BFGS')
 
     if result.success:
-        return Vec3.from_cartesian(*result.x)
+        # calculate accuracy parameter (average distance to path)
+        distances = [
+            np.sqrt(distance_to_line(result.x, line[0], line[1])) for line in lines
+        ]
+        av_dist = sum(distances) / len(distances)
+        debugger.trace(f"av distance: {av_dist}")
+
+        return Vec3.from_cartesian(*result.x), av_dist
 
     else:
         raise ValueError("Optimization failed: " + result.message)

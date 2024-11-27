@@ -75,7 +75,7 @@ class TrackingMaster:
             return
 
         # calculate 3d Position
-        position = solve(*angles)
+        position, accuracy = solve(*angles)
 
         debugger.log(
             f"calculated position for track {track_result.track_id}: {position.xyz}"
@@ -89,12 +89,13 @@ class TrackingMaster:
         self._ds.update_clients(TRes3Data(
             track_id=track_result.track_id,
             track_type=track.type,
+            position=position.xyz,
+            accuracy=accuracy,
             cam_angles=[CamAngle3(
                 cam_id=ca.cam_id,
                 position=a.origin.xyz,
                 direction=a.direction.xyz
-            ) for a, ca in zip(angles, track_result.cam_angles)],
-            position=position.xyz
+            ) for a, ca in zip(angles, track_result.cam_angles)]
         ))
         debugger.trace(f"tracker: updated clients")
 

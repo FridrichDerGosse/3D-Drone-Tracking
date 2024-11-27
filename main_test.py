@@ -8,12 +8,16 @@ Author:
 Nilusink
 """
 import matplotlib.pyplot as plt
+from icecream import ic
 import numpy as np
 import math as m
 
-from core.tools import CamAngle3
+from core.tools import CamAngle3, debugger, DebugLevel
 from core.maths import solve, CameraResult
 from core.tools import Vec3
+
+ic.prefix = lambda *_: ">"
+debugger.init("", True, False, debug_level=DebugLevel.trace)
 
 
 # s1 = CameraResult(
@@ -38,9 +42,10 @@ angles = [CameraResult(
     Vec3.from_cartesian(*a.direction) * 3
 ) for a in [a1, a2, a3]]
 
-target = solve(*angles).xyz
+target, accuracy = solve(*angles)
+target = target.xyz
 
-print(target)
+print(target, accuracy)
 
 # matpotlib debugging
 # Plotting in 3D
