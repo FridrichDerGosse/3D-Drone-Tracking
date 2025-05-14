@@ -28,7 +28,12 @@ def solve(*results: CameraResult) -> tuple[Vec3, float]:
             np.array(result.direction.xyz),
         ))
 
-    result = minimize(objective, x0=np.array([0.0, 0.0, 0.0]), args=(lines,), method='BFGS')
+    result = minimize(
+        objective,
+        x0=np.array([0.0, 0.0, 0.0]),
+        args=(lines,),
+        method='BFGS'
+    )
 
     if result.success:
         # calculate accuracy parameter (average distance to path)
@@ -62,7 +67,10 @@ def distance_to_line(point, line_point, line_direction):
 
 
 # Objective function: minimize total squared distance to all lines
-def objective(point: np.array, lines: list[tuple[np.array, np.array]]) -> float:
+def objective(
+        point: np.array,
+        lines: list[tuple[np.array, np.array]]
+) -> float:
     """
     calculate the sum of the distances to each line
     """

@@ -17,7 +17,7 @@ from core.maths import solve, CameraResult
 from core.tools import Vec3
 
 ic.prefix = lambda *_: ">"
-debugger.init("", True, False, debug_level=DebugLevel.trace)
+debugger.init("", True, False, debug_level=DebugLevel.log)
 
 
 # s1 = CameraResult(
